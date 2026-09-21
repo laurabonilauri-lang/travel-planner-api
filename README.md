@@ -41,8 +41,3 @@ O projeto segue o **Cenário 1** das diretrizes da disciplina, no qual esta API 
 
 - **Serviço Consumido:** Louami Airport API (`https://api.louami.com/v1/airport/{codigo}`)
 - **Objetivo:** Consultar o nome oficial do aeroporto e o status operacional a partir do código IATA informado (ex: `MIA`, `CWB`, `GRU`), retornando os dados tratados em formato JSON para a interface.
-
----
-
-├── requirements.txt              # Dependências e bibliotecas do projeto Python
-└── README.md                     # Documentação completa da API (Back-End)

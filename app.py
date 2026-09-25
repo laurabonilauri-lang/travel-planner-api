@@ -209,37 +209,53 @@ def delete_viagem(path: ViagemPathSchema):
         session.close()
 
 
-# ROTA GET (Consulta API Externa de Voos)
+# ROTA GET (Consulta API Externa Pública de Destinos)
 @app.get(
     "/voos/<string:codigo_iata>",
     tags=[voo_tag],
     responses={"200": VooViewSchema},
 )
 def buscar_voos(path: VooPathSchema):
-    """Consulta voos/aeroportos em uma API pública externa"""
-    codigo = path.codigo_iata.upper()
+    """Consulta dados reais do destino em uma API pública externa"""
+    codigo = path.codigo_iata.strip()
 
     try:
-        url = f"https://api.louami.com/v1/airport/{codigo}"
-        res = requests.get(url, timeout=3)
+        url = f"https://geocoding-api.open-meteo.com/v1/search?name={codigo}&count=1&language=pt"
+        res = requests.get(url, timeout=5)
+        
         if res.status_code == 200:
             data = res.json()
+            results = data.get("results")
+            
+            if results and len(results) > 0:
+                item = results[0]
+                nome = item.get("name", codigo)
+                pais = item.get("country", "")
+                regiao = item.get("admin1", "N/A")
+                populacao = item.get("population")
+                
+                detalhe_local = f"{nome}, {pais}" if pais else nome
+                texto_populacao = f"{populacao:,} habitantes".replace(",", ".") if populacao else "Não informada"
+                
+                return {
+                    "aeroporto": f"Destino: {detalhe_local}",
+                    "status": f"Região/Estado: {regiao} | População: {texto_populacao}",
+                    "origem": "Curitiba (CWB)",
+                    "destino": codigo.upper(),
+                }, 200
+            else:
+                return {
+                    "message": f"Nenhum destino localizado para o termo '{codigo}'."
+                }, 404
+        else:
             return {
-                "aeroporto": data.get("name", f"Aeroporto {codigo}"),
-                "status": "Operando normalmente",
-                "origem": "CWB",
-                "destino": codigo,
-            }, 200
-    except Exception:
-        pass
+                "message": f"Erro de resposta na API externa: status {res.status_code}."
+            }, 502
 
-    return {
-        "aeroporto": f"Aeroporto Internacional ({codigo})",
-        "status": "Operando com rotas ativas",
-        "origem": "Curitiba (CWB)",
-        "destino": codigo,
-    }, 200
-
+    except requests.exceptions.RequestException as e:
+        return {
+            "message": f"Erro de conexão com a API externa: {str(e)}"
+        }, 502
 
 # 6. Execução do Servidor
 if __name__ == "__main__":

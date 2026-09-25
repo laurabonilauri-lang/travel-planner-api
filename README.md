@@ -2,13 +2,13 @@
 
 Este repositório contém o módulo de serviços e banco de dados (Back-End) para a aplicação **Travel Planner**, desenvolvida como MVP para a disciplina de Arquitetura de Software.
 
-A aplicação disponibiliza uma API RESTful desenvolvida em Python (Flask) para o gerenciamento de roteiros de viagens (com operações de CRUD completo) e integração com serviços externos para consulta de dados de voos e aeroportos.
+A aplicação disponibiliza uma API RESTful desenvolvida em Python (Flask) para o gerenciamento de roteiros de viagens (com operações de CRUD completo) e integração com serviços externos para consulta de informações sobre destinos turísticos e cidades.
 
 ---
 
 ## 🏗️ Arquitetura da Solução
 
-O projeto segue o **Cenário 1** das diretrizes da disciplina, no qual esta API Back-End em Python (Flask) é responsável pela persistência de dados em banco SQLite (via SQLAlchemy), além de intermediar a comunicação com uma API pública externa para consulta de informações aeroportuárias.
+O projeto segue o **Cenário 1** das diretrizes da disciplina, no qual esta API Back-End em Python (Flask) é responsável pela persistência de dados em banco SQLite (via SQLAlchemy), além de intermediar a comunicação com uma API pública externa (atuando como proxy) para consulta de dados geográficos e demográficos de destinos.
 
 ---
 
@@ -35,9 +35,11 @@ O projeto segue o **Cenário 1** das diretrizes da disciplina, no qual esta API 
 | `POST` | `/viagem` | Cadastra um novo planejamento de viagem (destino, datas, orçamento e bagagem). |
 | `PUT` | `/viagem/{id}` | Atualiza os dados de uma viagem cadastrada existente pelo seu ID. |
 | `DELETE`| `/viagem/{id}` | Remove uma viagem cadastrada pelo seu ID. |
-| `GET` | `/voos/{codigo_iata}` | Consulta informações e status de aeroportos/voos via API Externa. |
+| `GET` | `/voos/{codigo_iata}` | Consulta informações reais de localização, região e população do destino via API Externa. |
 
 ### 2. API Externa Pública Consumida
 
-- **Serviço Consumido:** Louami Airport API (`https://api.louami.com/v1/airport/{codigo}`)
-- **Objetivo:** Consultar o nome oficial do aeroporto e o status operacional a partir do código IATA informado (ex: `MIA`, `CWB`, `GRU`), retornando os dados tratados em formato JSON para a interface.
+- **Serviço Consumido:** Open-Meteo Geocoding API (`https://geocoding-api.open-meteo.com/v1/search`)
+- **Objetivo:** Consultar dinamicamente o nome oficial da cidade, país, região/estado e população a partir do termo de pesquisa informado (ex: `São Paulo`, `Paris`, `Miami`, `Tokyo`).
+- **Licença / Autenticação:** Gratuita e pública (não exige *API Key* ou cadastro).
+- **Tratamento de Dados:** A requisição é efetuada pelo Back-End em Flask e enviada em formato JSON ao Front-End. Erros de rede ou termos não encontrados são tratados com códigos de status HTTP reais (`404` e `502`), garantindo o envio exclusivo de informações autênticas.
